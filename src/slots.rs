@@ -504,7 +504,7 @@ pub mod velocity_linear2 {
         scale: 1.0 / 256.0,
         offset: 0.0,
         limit_lower: 0.0,
-        limit_upper: 250.99609375,
+        limit_upper: 250.996_1,
     };
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
@@ -558,6 +558,7 @@ pub mod minute_offset {
         limit_upper: 125.0,
     };
 
+    #[allow(clippy::cast_possible_truncation)]
     pub fn dec(value: u8) -> Option<i8> {
         if value == crate::PDU_NOT_AVAILABLE {
             return None;
@@ -565,7 +566,7 @@ pub mod minute_offset {
         Some(RESOLUTION.dec(f32::from(value)) as i8)
     }
 
-    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn enc(value: Option<i8>) -> u8 {
         value.map_or(crate::PDU_NOT_AVAILABLE, |v| RESOLUTION.enc(f32::from(v)) as u8)
     }
@@ -579,12 +580,13 @@ pub mod hour_offset {
         limit_upper: 125.0,
     };
 
+    #[allow(clippy::cast_possible_truncation)]
     pub fn dec(value: u8) -> Option<i8> {
         if value == crate::PDU_NOT_AVAILABLE { return None; }
         Some(RESOLUTION.dec(f32::from(value)) as i8)
     }
 
-    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn enc(value: Option<i8>) -> u8 {
         value.map_or(crate::PDU_NOT_AVAILABLE, |v| RESOLUTION.enc(f32::from(v)) as u8)
     }

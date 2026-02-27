@@ -2063,7 +2063,7 @@ impl core::fmt::Display for EngineFluidLevelPressure2Message {
 //
 
 pub struct ResetMessage {
-    /// Command signal used to reset the PGNs and parameters as defined in Table SPN988_A.
+    /// Command signal used to reset the PGNs and parameters as defined in Table `SPN988_A`.
     pub trip_group_1: Option<bool>,
     /// Command signal used to reset proprietary parameters associated with a trip but not
     /// defined within this document.
