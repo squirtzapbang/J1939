@@ -128,9 +128,24 @@ impl BroadcastTransport {
 
                 frame
             }
-            // TODO: Return error frame if packet is out of bounds.
             BroadcastTransportState::DataTransfer(packet) => {
+                let start = packet as usize * DATA_FRAME_SIZE;
+
+                // Return a padding frame if called beyond the data boundary
+                if start >= self.data_length {
+                    return FrameBuilder::new(
+                        IdBuilder::from_pgn(PGN::TransportProtocolDataTransfer)
+                            .priority(7)
+                            .sa(self.sa)
+                            .da(0xff)
+                            .build(),
+                    )
+                    .set_len(8)
+                    .build();
+                }
+
                 let sequence = packet + 1;
+                let end = (start + DATA_FRAME_SIZE).min(self.data_length);
 
                 let mut frame_builder = FrameBuilder::new(
                     IdBuilder::from_pgn(PGN::TransportProtocolDataTransfer)
@@ -143,18 +158,12 @@ impl BroadcastTransport {
                 let payload = frame_builder.as_mut();
                 payload[0] = sequence;
 
-                let data_chunk = &self.data
-                    [packet as usize * DATA_FRAME_SIZE..(packet as usize + 1) * DATA_FRAME_SIZE];
-
-                if data_chunk.len() == DATA_FRAME_SIZE {
-                    payload[1..8].copy_from_slice(data_chunk);
-                } else {
-                    payload[1..=data_chunk.len()].copy_from_slice(data_chunk);
-                }
+                let data_chunk = &self.data[start..end];
+                payload[1..=data_chunk.len()].copy_from_slice(data_chunk);
 
                 let frame = frame_builder.set_len(8).build();
 
-                self.state = BroadcastTransportState::DataTransfer(packet + 1);
+                self.state = BroadcastTransportState::DataTransfer(sequence);
 
                 frame
             }
@@ -165,15 +174,21 @@ impl BroadcastTransport {
         let pgn = frame.id().pgn();
         if pgn == PGN::TransportProtocolConnectionManagement {
             let data = frame.as_ref();
+            if data.len() < 8 {
+                return; // Malformed CM frame
+            }
             let data_length = u16::from_le_bytes([data[1], data[2]]) as usize;
 
             if data[0] == ConnectionManagement::BroadcastAnnounceMessage as u8 {
                 self.pgn = PGN::from_le_bytes([data[5], data[6], data[7]]);
-                self.data_length = data_length;
+                self.data_length = data_length.min(DATA_MAX_LENGTH);
                 self.state = BroadcastTransportState::DataTransfer(0);
             }
         } else if pgn == PGN::TransportProtocolDataTransfer {
             let data = frame.as_ref();
+            if data.len() < 2 {
+                return; // Malformed DT frame
+            }
             let sequence = data[0];
 
             // Validate sequence number: must be 1-255

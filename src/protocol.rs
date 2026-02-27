@@ -15,8 +15,12 @@ pub fn request(da: u8, sa: u8, pgn: PGN) -> Frame {
 }
 
 /// Extract PGN from PDU.
+///
+/// # Panics
+/// Panics if `pdu` has fewer than 3 bytes.
 #[must_use]
 pub fn request_from_pdu(pdu: &[u8]) -> PGN {
+    assert!(pdu.len() >= 3, "request_from_pdu requires at least 3 bytes, got {}", pdu.len());
     PGN::from_le_bytes([pdu[0], pdu[1], pdu[2]])
 }
 
