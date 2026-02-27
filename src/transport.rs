@@ -5,6 +5,7 @@ pub const DATA_MAX_LENGTH: usize = 1785;
 /// Maximum number of data bytes per frame
 pub const DATA_FRAME_SIZE: usize = 7;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConnectionManagement {
     RequestToSend = 0x10,
     ClearToSend = 0x11,

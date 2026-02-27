@@ -767,7 +767,7 @@ impl FuelEconomyMessage {
             inst_bytes[1],
             avg_bytes[0],
             avg_bytes[1],
-            self.throttle_position.unwrap_or(PDU_NOT_AVAILABLE),
+            slots::position_level::enc(self.throttle_position),
             PDU_NOT_AVAILABLE,
         ]
     }
